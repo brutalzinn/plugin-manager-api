@@ -34,4 +34,24 @@ module.exports = {
       ...token,
     });
   },
+
+  async register(req, res) {
+    const bodyPayload = req.body;
+    bodyPayload.user_type = 1;
+    bodyPayload.status = true;
+    const user = await User.create(bodyPayload);
+    const token = generateToken(user);
+
+    const response = {
+      user,
+    };
+    if (user.status) {
+      response.token = token;
+    }
+
+    res.json(response);
+  },
+
+
+
 };

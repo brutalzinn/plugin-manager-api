@@ -1,9 +1,26 @@
 version: "3.8"
 services:
+    server:
+      build: .
+      command: >
+        sh -c "rm -rfv ./uploads/* && npm install && npm run dev"
+      container_name: plugin-manager-api
+      networks:
+        - default
+      env_file:
+        - .env
+      depends_on:
+        - database
+      ports:
+        - 8000:8000
+      volumes:
+        - ./:/home/node/app
     database:
       container_name: pg_container
       image: postgres
       restart: always
+      networks:
+        - default      
       environment:
         POSTGRES_USER: root
         POSTGRES_PASSWORD: pass
@@ -13,22 +30,11 @@ services:
     pgadmin:
       container_name: pgadmin4_container
       image: dpage/pgadmin4
+      networks:
+        - default      
       restart: always
       environment:
         PGADMIN_DEFAULT_EMAIL: root@root.com
         PGADMIN_DEFAULT_PASSWORD: root
       ports:
         - "5050:80"
-    server:
-      build: .
-      command: >
-        sh -c "rm -rfv ./tmp/* && npm install && npm run dev"
-      container_name: bootcamp-teste-api
-      depends_on:
-        - database
-      ports:
-        - 8000:8000
-      volumes:
-        - ./:/home/node/app
-      links:
-        - database

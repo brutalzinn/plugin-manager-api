@@ -7,6 +7,7 @@ class User extends Model {
         email: DataTypes.STRING,
         password: DataTypes.STRING,
         name: DataTypes.STRING,
+        status: DataTypes.BOOLEAN,
         rank: DataTypes.INTEGER,
       },
       {
