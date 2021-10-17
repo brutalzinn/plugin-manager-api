@@ -24,7 +24,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       repo: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.STRING,
       },
       name: {
@@ -32,7 +32,7 @@ module.exports = {
         type: Sequelize.STRING,
       },
       description: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.STRING,
       },
       status: {

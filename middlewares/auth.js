@@ -27,6 +27,7 @@ module.exports = (req, res, next) => {
     }
     req.userId = data.id
     req.userRank = data.rank
+
     next();
   });
 };

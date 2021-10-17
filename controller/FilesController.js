@@ -54,21 +54,27 @@ module.exports = {
         
             const filename = req.file.filename
             const file = {
-                filename,
-                type: fileManager.getExtension(filename),
+                filename: fileManager.getFileInfo(filename).name,
+                type: fileManager.getFileInfo(filename).type,
                 description: req.body.description,
                 name: req.body.name,
+                repo:req.body.repo,
                 user_id: req.userId,
                 url: fileManager.getFileUrl(filename)
             }
             //await ftpManager.upload(req.file.filename)
+            console.log(`Uploading ${filename} to hostgator server..`)
+
            await Files.create(file)
+           console.log(`trying to delete file ${filename} of tmp folder.`)
+           fileManager.delFile(filename) 
+           
             
         })
       //  await ftpManager.example()
         // add file and it's path to postgres database
         //   Files.create({filename,filepath:filePath,name:req.body.name})
-      //  return res.json({status:true});
+       return res.json({status:true});
         
         
     }
