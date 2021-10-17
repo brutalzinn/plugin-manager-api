@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const routes = require("./routes");
 app.use(routes);
 
-console.log(teste.randomFilesModel(1))
+//console.log(teste.randomFilesModel(1))
 
 
 //catch 404 and forward to error handler

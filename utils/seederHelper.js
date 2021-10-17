@@ -24,7 +24,7 @@ const randomDescription = (tam) => {
 const randomRepo = (filename) => {  
     let repo = urlRepoExample[getRandomInt(0,urlRepoExample.length - 1)]
     let users = repoUsers[getRandomInt(0,repoUsers.length - 1)]
-    return `${repo}/${users}/${filename}`
+    return `${repo}/${users}/${fileManager.getFileInfo(filename).name}`
 }
 
 const randomFilesModel = (tam) => {
@@ -49,5 +49,6 @@ const randomFilesModel = (tam) => {
 }
 
 module.exports = {
+    randomFile,
     randomFilesModel
 }

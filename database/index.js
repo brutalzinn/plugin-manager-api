@@ -13,4 +13,6 @@ Files.init(connection);
 User.associate(connection.models);
 Files.associate(connection.models);
 
+Files.Hooks(connection.models)
+
 module.exports = connection;

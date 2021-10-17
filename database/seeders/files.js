@@ -5,10 +5,9 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
 
   
-    const  data = helper.randomFilesModel(5)
-    console.log("ARRAY", data)
+    const  data = helper.randomFilesModel(30)
+    console.log("FAKE FILES CREATED: ", data.length)
     return  await queryInterface.bulkInsert('files', data);
-    
   },
 
   down: async (queryInterface, Sequelize) => {

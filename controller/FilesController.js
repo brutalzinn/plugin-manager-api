@@ -2,8 +2,8 @@ const Files = require("../database/models/Files");
 const User = require("../database/models/User");
 const path = require('path');
 const fs = require('fs');
-
-
+const es = require('../config/elasticsearch')
+const randomHelper = require('../utils/seederHelper')
 const uuid = require('uuid').v4
 
 
@@ -32,7 +32,35 @@ module.exports = {
         //
           }]});
         return res.json({status:true,data});
-        
+    },
+
+    async search(req,res) {
+      console.log("LOOOG",req.q)
+        try{
+            const result = await es.search({
+                index: 'files',
+                type: 'files',
+                q:req.query.q
+            })
+            
+            const ids = result.hits.hits.map((item) => {
+                return item._id
+            })
+            console.log("found ids",ids)
+            data = await Files.findAll({
+                where: {
+                    id: ids
+                }
+            })
+             res.send(data)
+        }
+        catch(err){
+            res.status(500).send({
+                error: 'An error has occured trying to get the articles' + err
+            })
+        }
+    
+
     },
     async delete(req, res) {
         fs.unlink(req.query.filepath, () => {
@@ -42,6 +70,14 @@ module.exports = {
     },
     async download(req, res) {
         return res.download(req.query.filepath);
+    },
+    async uploadTest (req,res ){
+
+      const randomFile = randomHelper.randomFilesModel(1)
+     
+   await Files.create(randomFile[0])
+   return res.json({status:true});
+
     },
     async upload(req, res) {
         
