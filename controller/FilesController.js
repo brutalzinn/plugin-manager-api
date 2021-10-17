@@ -35,12 +35,22 @@ module.exports = {
     },
 
     async search(req,res) {
-      console.log("LOOOG",req.q)
         try{
+          console.log('test with',req.query.q)
             const result = await es.search({
                 index: 'files',
                 type: 'files',
-                q:req.query.q
+                body: {
+                  query: {
+                    regexp: {
+                      name: {
+                      value:  req.query.q + '.*',
+                      flags: "ALL"
+            
+                      }
+                    }
+                  }
+                }
             })
             
             const ids = result.hits.hits.map((item) => {
