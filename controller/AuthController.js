@@ -1,6 +1,6 @@
 const User = require("../database/models/User");
 const bcrypt = require("bcrypt");
-const { generateToken } = require("../utils/helper");
+const { generateToken, generateHash } = require("../utils/helper");
 module.exports = {
   async login(req, res) {
     const { email, password } = req.body;
@@ -24,7 +24,7 @@ module.exports = {
       id: user.id,
       name: user.name,
       email: user.email,
-      user_type: user.user_type,
+      rank: user.rank,
     };
 
     const token = generateToken(payloadToken);
@@ -37,8 +37,18 @@ module.exports = {
 
   async register(req, res) {
     const bodyPayload = req.body;
-    bodyPayload.user_type = 1;
+ 
+    bodyPayload.rank = 1;
     bodyPayload.status = true;
+
+    const user_check = await User.findOne({ where: { email:bodyPayload.email } });
+    if (user_check) {
+      return res
+        .status(400)
+        .json({ error: "Usuário já cadastrado." });
+    }
+
+    bodyPayload.password = await generateHash(bodyPayload.password)
     const user = await User.create(bodyPayload);
     const token = generateToken(user);
 

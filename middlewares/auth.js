@@ -4,7 +4,6 @@ console.log("secret_key", secret_key);
 
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  console.log("authHeader", authHeader);
 
   if (!authHeader) {
     return res.status(401).json({ error: "No token provided" });
@@ -16,9 +15,6 @@ module.exports = (req, res, next) => {
   }
 
   const [schema, token] = parts;
-  console.log("########################");
-  console.log("token", token);
-  console.log("########################");
 
   // if (!/Bearer$/i.test(scheme)) {
   if (schema.toLowerCase() !== "bearer") {
@@ -29,7 +25,8 @@ module.exports = (req, res, next) => {
     if (err) {
       res.status(401).json({ error: "Token Invalid" });
     }
-
+    req.userId = data.id
+    req.userRank = data.rank
     next();
   });
 };
