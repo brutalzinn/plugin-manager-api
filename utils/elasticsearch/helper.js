@@ -1,5 +1,17 @@
 const es = require('../../config/elasticsearch')
-
+const tagsGenerator = (model = []) =>{
+  const regex = /[\s]/
+  let tags = []
+  model.map((item)=>{
+      tags.push(...item.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().split(regex))
+  })
+  for(var i = 0;i < tags.length; i++){
+      if(tags[i].includes(tags[i+1])){
+         tags.splice(i,1)
+      }
+  }
+  return tags
+}
 
 const saveDocument = async (instance,data,models) => {
   
@@ -29,11 +41,7 @@ const saveDocument = async (instance,data,models) => {
       nest: true
     })
     salt = [result.name,result.user.name,result.version.file_version]
-    salt.map((item)=>{
-      if(item.length !== 0){
-        tags.push(...item.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().split(regex))
-      }
-    })
+    tags = tagsGenerator(salt)
     document = {
       id:result.id,
       name:result.name,
