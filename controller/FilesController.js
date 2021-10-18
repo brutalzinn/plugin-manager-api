@@ -28,7 +28,8 @@ const multerUpload = multer({ storage: storage });
 module.exports = {
   async index(req, res) {
     const data = await Files.findAll({include: [{
-      model: User
+      model: User,
+      as: 'user'
       //
     }]});
     return res.json({status:true,data});
@@ -55,6 +56,7 @@ module.exports = {
       const ids = result.hits.hits.map((item) => {
         return item._id
       })
+    
       console.log("found ids",ids)
       data = await Files.findAll({
         where: {

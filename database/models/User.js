@@ -16,16 +16,18 @@ class User extends Model {
       {
         tableName: "users", 
         sequelize,
-      
+        
       }
-    );
-  }
-
-  static associate(models) {
-    this.hasMany(models.Files, {
-        foreignKey: "user_id",
+      );
+    }
+    
+    static associate(models) {
+      this.hasMany(models.Files, {
+        as: 'user',
+        foreignKey: "user_id"
       });
+    }
   }
-}
-
-module.exports = User;
+  
+  module.exports = User;
+  

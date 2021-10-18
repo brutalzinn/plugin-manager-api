@@ -6,7 +6,6 @@ var logger = require('morgan');
 const teste = require('./utils/seederHelper')
 
 var app = express();
-require("./database");
 
 
 // view engine setup
@@ -18,6 +17,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+require("./database");
+
+
 const routes = require("./routes");
 app.use(routes);
 

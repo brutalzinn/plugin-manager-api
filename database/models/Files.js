@@ -1,21 +1,23 @@
 const { Model, DataTypes } = require("sequelize");
-const es = require('../../config/elasticsearch')
-const saveDocument = (instance) => {
-  return es.create({
-      index: 'files',
-      type: 'files',
-      id: instance.dataValues.id,
-      body: { name: instance.dataValues.name },
-  });
-}
+//const es = require('../../config/elasticsearch')
+// const saveDocument = (instance) => {
+//   return es.create({
+//       index: 'files',
+//       type: 'files',
+//       id: instance.dataValues.id,
+//       body: { name: instance.dataValues.name },
+//   });
+// }
 
-const deleteDocument = (instance) => {
-  return es.delete({
-      index: 'files',
-      type: 'files',
-      id: instance.dataValues.id,
-  });
-}
+// const deleteDocument = (instance) => {
+//   return es.delete({
+//       index: 'files',
+//       type: 'files',
+//       id: instance.dataValues.id,
+//   });
+//}
+
+const helper = require('../../utils/elasticsearch/helper')
 //filename, filepath
 class Files extends Model {
   static init(sequelize) {
@@ -36,21 +38,32 @@ class Files extends Model {
       {
         tableName: "files", 
         sequelize,
-      
+        
       }
-    );
-
-  //  this.addHook('afterDestroy', destroyDocument(this))
+      );
+      
+      //  this.addHook('afterDestroy', destroyDocument(this))
+    }
+    static associate(models) {
+      this.belongsTo(models.User, {
+        as: 'user',
+        foreignKey: "user_id"
+      });
+    }
+    static Hooks(models){
+      
+      this.afterCreate(async (data, options) => {
+        await helper.saveDocument(this,data,models)
+      });
+      this.afterUpdate(async (data, options) => {
+        await helper.saveDocument(this,data,models)
+      });
+      this.afterDestroy(async (data, options) => {
+        await helper.destroyDocument(this,data,models)
+      });
+      
+    }
   }
-  static associate(models) {
-    this.belongsTo(models.User, {
-      foreignKey: "user_id",
-    });
-  }
-  static Hooks(models){
-    this.addHook('afterCreate',saveDocument)
-    this.addHook('afterDestroy', deleteDocument)
-  }
-}
-
-module.exports = Files;
+  
+  module.exports = Files;
+  
