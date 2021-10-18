@@ -35,9 +35,9 @@ $ node elastic-sync.js
 
 ## Package Commands avaible
 
-    "start": "node ./app.js" - to start normal mode,
-    "dev": "nodemon -L ./app.js - to start with nodemon",
-    "refresh": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && node ./elastic-sync.js del:all && npx sequelize-cli db:seed --seed user.js" - sometimes i need to perform some changes in database.. this command execute a clear on database and clear all indexs in elastic search
+- "start"- to start normal mode,
+- "dev"- to start with nodemon",
+- "refresh" - sometimes i need to perform some changes in database.. this command execute a clear on database and clear all indexs in elastic search
 
 
 
