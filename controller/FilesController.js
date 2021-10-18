@@ -1,11 +1,13 @@
 const Files = require("../database/models/Files");
 const User = require("../database/models/User");
+const Version = require("../database/models/Version");
+
 const path = require('path');
 const fs = require('fs');
 const es = require('../config/elasticsearch')
 const randomHelper = require('../utils/seederHelper')
 const uuid = require('uuid').v4
-
+const versionManager = require("../service/versionManager")
 
 const ftpManager = require("../service/ftpManager")
 const fileManager = require("../service/fileManager")
@@ -28,26 +30,30 @@ const multerUpload = multer({ storage: storage });
 const getPagination = (page, size) => {
   const limit = size ? +size : 3;
   const offset = page ? page * limit : 0;
-
+  
   return { limit, offset };
 };
 const getPagingData = (data, page, limit) => {
   const { count: totalItems, rows: files } = data;
   const currentPage = page ? +page : 1;
   const totalPages = Math.ceil(totalItems / limit);
-
+  
   return { totalItems, files, totalPages, currentPage };
 };
 
 module.exports = {
   async index(req, res) {
-  const { page, size } = req.query;
-  const { limit, offset } = getPagination(page, size);
-  Files.findAndCountAll({ limit, offset,include: [{
-    model: User,
-    as: 'user'
-    //
-  }] })
+    const { page, size } = req.query;
+    const { limit, offset } = getPagination(page, size);
+    Files.findAndCountAll({ limit, offset,include: [{
+      model: User,
+      as: 'user'
+    },
+    {
+      model: Version,
+      as: 'version'
+    }
+  ] })
     .then(data => {
       const response = getPagingData(data, page, limit);
       res.send(response);
@@ -55,7 +61,7 @@ module.exports = {
     .catch(err => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving tutorials."
+        err.message || "Some error occurred while retrieving tutorials."
       });
     });
     
@@ -69,65 +75,62 @@ module.exports = {
   
   async search(req,res) {
     var searchParams  =[]
-     searchParams = req.query.q.normalize('NFD').replace(/[\u0300-\u036f]/g, "").split(' ')
+    searchParams = req.query.q.normalize('NFD').replace(/[\u0300-\u036f]/g, "").split(' ')
     
     searchParams =  searchParams.map((term)=> {
-     return {
-       
+      return {
         regexp: {
-           search: {
-              value: term + '.*',
-              flags: "ALL"
-           }
+          search: {
+            value: term + '.*',
+            flags: "ALL"
+          }
         }
-     }  
+      }  
     })
-   console.log(JSON.stringify(searchParams))
     try{
       const result = await es.search({
         index: 'files',
         type: 'files',
         body: {  
           query: {
-              bool: {
-                filter: searchParams
-              }}
+            bool: {
+              filter: searchParams
+            }}
           }
         })
         const ids = result.hits.hits.map((item) => {
           return item._id
         })
-
-  const { page, size } = req.query;
-  const { limit, offset } = getPagination(page, size);
-  Files.findAndCountAll({ limit, offset, where: {
-    id: ids
-  },include: [{
-    model: User,
-    as: 'user'
-    //
-  }] })
-    .then(data => {
-      const response = getPagingData(data, page, limit);
-      res.send(response);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving tutorials."
-      });
-    });
-
-
-        
+        const { page, size } = req.query;
+        const { limit, offset } = getPagination(page, size);
+        Files.findAndCountAll({ limit, offset, where: {
+          id: ids
+        },include: [{
+          model: User,
+          as: 'user'
+        },
+        {
+          model: Version,
+          as: 'version'
+        }
+      
+      ] })
+        .then(data => {
+          const response = getPagingData(data, page, limit);
+          res.send(response);
+        })
+        .catch(err => {
+          res.status(500).send({
+            message:
+            err.message || "Some error occurred while retrieving tutorials."
+          });
+        }); 
       }
       catch(err){
         res.status(500).send({
           error: 'An error has occured trying to get the articles' + err
         })
       }
-      
-      
     },
     async delete(req, res) {
       fs.unlink(req.query.filepath, () => {
@@ -155,23 +158,37 @@ module.exports = {
           .status(400)
           .json({ error: "Error on upload plugin" });
         }
-        
-        const filename = req.file.filename
-        const file = {
-          filename: fileManager.getFileInfo(filename).name,
-          type: fileManager.getFileInfo(filename).type,
-          description: req.body.description,
-          name: req.body.name,
-          repo:req.body.repo,
-          user_id: req.userId,
-          url: fileManager.getFileUrl(filename)
+        let version = {
+          sha:req.body.sha || '',
+          crc:req.body.crc || '',
+          file_version: req.body.version || '1.0.0.0' 
         }
+        let file = {}
+        let filename = req.file.filename
+        versionManager.create(version).then((version_id)=>{
+        
+          file = {
+           filename: fileManager.getFileInfo(filename).name,
+           type: fileManager.getFileInfo(filename).type,
+           description: req.body.description,
+           name: req.body.name,
+           version_id,
+           repo:req.body.repo,
+           user_id: req.userId,
+           url: fileManager.getFileUrl(filename)
+         }
+         Files.create(file).finally((e)=>{
+          ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
+         })
+        
+        })
+       
         //await ftpManager.upload(req.file.filename)
         console.log(`Uploading ${filename} to hostgator server..`)
         
-        await Files.create(file)
+    
         console.log(`trying to delete file ${filename} of tmp folder.`)
-        fileManager.delFile(filename) 
+       
         
         
       })

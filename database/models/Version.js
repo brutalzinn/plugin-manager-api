@@ -1,35 +1,25 @@
 const { Model, DataTypes } = require("sequelize");
 const helper = require('../../utils/elasticsearch/helper')
-class Files extends Model {
+class Version extends Model {
   static init(sequelize) {
     super.init(
       {
-        filename: DataTypes.STRING,
-        type: DataTypes.STRING,
-        url: DataTypes.STRING,
-        user_id: DataTypes.INTEGER,
-        version_id: DataTypes.INTEGER,
-        name: DataTypes.STRING,
-        repo: DataTypes.STRING,
-        description: DataTypes.STRING,
+        file_version: DataTypes.STRING,
+        sha: DataTypes.STRING,
+        crc: DataTypes.STRING,
         status: {
           type: DataTypes.BOOLEAN,
           defaultValue: true
         }
       },
       {
-        tableName: "files", 
-        sequelize,
-        
+        tableName: "versions", 
+        sequelize
       }
       );
     }
     static associate(models) {
-      this.belongsTo(models.User, {
-        as: 'user',
-        foreignKey: "user_id"
-      });
-      this.belongsTo(models.Version, {
+      this.hasMany(models.Files, {
         as: 'version',
         foreignKey: "version_id"
       });
@@ -47,7 +37,8 @@ class Files extends Model {
       });
       
     }
+    
   }
   
-  module.exports = Files;
+  module.exports = Version;
   
