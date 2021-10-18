@@ -16,7 +16,7 @@ You can find repository of VisualMeeting here: [VisualMeeting](https://github.co
 ```
 $ docker-compose up
 ```
-3. Wait docker compose run all requeriments to to a container
+3. Wait docker compose run all requeriments to a container
 
 ## Installation without Docker:
 
@@ -32,6 +32,14 @@ Use this command to view all commands avaible:
 ```
 $ node elastic-sync.js
 ```
+
+## Package Commands avaible
+
+    "start": "node ./app.js" - to start normal mode,
+    "dev": "nodemon -L ./app.js - to start with nodemon",
+    "refresh": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && node ./elastic-sync.js del:all && npx sequelize-cli db:seed --seed user.js" - sometimes i need to perform some changes in database.. this command execute a clear on database and clear all indexs in elastic search
+
+
 
 
 
