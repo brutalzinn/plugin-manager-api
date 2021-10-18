@@ -5,6 +5,7 @@ services:
       command: >
         sh -c "rm -rfv ./uploads/* && npm install && npm run dev"
       container_name: plugin-manager-api
+      restart: always
       networks:
         - default
       env_file:
@@ -40,6 +41,7 @@ services:
         - "5050:80"
     elasticsearch:
         container_name: es-container
+        restart: always
         image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
         environment:
           - xpack.security.enabled=false
@@ -50,6 +52,7 @@ services:
           - 9200:9200
     kibana:
       container_name: kb-container
+      restart: always
       image: docker.elastic.co/kibana/kibana:7.11.0
       environment:
         - ELASTICSEARCH_HOSTS=http://es-container:9200
@@ -59,6 +62,19 @@ services:
         - elasticsearch
       ports:
         - 5601:5601
+    rabbitmq:
+            image: rabbitmq:3-management-alpine
+            container_name: rabbitmq
+            volumes:
+                - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+                - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+                - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+            env_file:
+              - .env
+            ports:
+                - 5672:5672
+                - 15672:15672
+      
 networks:
   es-net:
     driver: bridge

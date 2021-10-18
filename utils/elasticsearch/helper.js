@@ -24,10 +24,19 @@ const saveDocument = async (instance,data,models) => {
             raw: true,
             nest: true,
           })
+          const regex = /[\s]/
+          let salt = [result.name,result.user.name]
+          let tags = []
+          salt.map((item)=>{
+            if(item.length !== 0){
+                  tags.push(...item.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toUpperCase().trim().split(regex))
+                }
+            })
           document = {
             id:result.id,
             name:result.name,
-            author:result.user.name
+            author:result.user.name,
+            search:tags
           }
 
         break;

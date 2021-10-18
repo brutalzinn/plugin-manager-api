@@ -7,7 +7,7 @@ const dbConfig = require("./config/database");
 const connection = new Sequelize(dbConfig["development"]);
 let normalizedPath = require("path").join(__dirname, "database","models");
 
-program.command('del:db [todo]')
+program.command('del:db')
 .description('Del all data from elastic search that exists in database')
 .action(async (todo) => {
     glob.sync( path.join(normalizedPath,'**/*.js') ).forEach( async function( file ) {
@@ -30,7 +30,7 @@ program.command('del:db [todo]')
         });
     });
     // thanks to https://stackoverflow.com/questions/31926785/how-do-you-delete-all-indexes-in-elastic-search-using-node-js
-    program.command('del:all [todo]')
+    program.command('del:all')
     .description('Del all data in elastic search')
     .action(async (todo) => {
         es.indices.delete({
@@ -43,7 +43,7 @@ program.command('del:db [todo]')
             }
         });
     });
-    program.command('del [todo]')
+    program.command('del [index]')
     .description('Del all data in elastic search with especify index')
     .option('-i, --index [index]', 'Index elastic search')
     .action(async (todo,options) => {

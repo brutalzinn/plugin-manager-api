@@ -27,10 +27,10 @@ const randomRepo = (filename) => {
     return `${repo}/${users}/${fileManager.getFileInfo(filename).name}`
 }
 
-const randomFilesModel = (tam) => {
+const randomFilesModel = (tam, name = null, userId = 1) => {
     let filesModel = []
     for(var i =0 ; i < tam; i ++){
-        let filename = randomFile()
+        let filename = name || randomFile() 
         let file = {
             filename: fileManager.getFileInfo(filename).name,
             type: fileManager.getFileInfo(filename).type,
@@ -40,7 +40,7 @@ const randomFilesModel = (tam) => {
             status:true,
             created_at: new Date(),
             updated_at: new Date(),
-            user_id: 1,
+            user_id: userId,
             url: fileManager.getFileUrl(filename)
         }
         filesModel.push(file)
