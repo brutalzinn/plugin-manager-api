@@ -25,14 +25,46 @@ var storage = multer.diskStorage({
 
 const multerUpload = multer({ storage: storage });
 
+const getPagination = (page, size) => {
+  const limit = size ? +size : 3;
+  const offset = page ? page * limit : 0;
+
+  return { limit, offset };
+};
+const getPagingData = (data, page, limit) => {
+  const { count: totalItems, rows: files } = data;
+  const currentPage = page ? +page : 1;
+  const totalPages = Math.ceil(totalItems / limit);
+
+  return { totalItems, files, totalPages, currentPage };
+};
+
 module.exports = {
   async index(req, res) {
-    const data = await Files.findAll({include: [{
-      model: User,
-      as: 'user'
-      //
-    }]});
-    return res.json({status:true,data});
+  const { page, size } = req.query;
+  const { limit, offset } = getPagination(page, size);
+  Files.findAndCountAll({ limit, offset,include: [{
+    model: User,
+    as: 'user'
+    //
+  }] })
+    .then(data => {
+      const response = getPagingData(data, page, limit);
+      res.send(response);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving tutorials."
+      });
+    });
+    
+    // const data = await Files.findAll({include: [{
+    //   model: User,
+    //   as: 'user'
+    //   //
+    // }]});
+    //return res.json({status:true,data});
   },
   
   async search(req,res) {
@@ -62,18 +94,32 @@ module.exports = {
               }}
           }
         })
-        
         const ids = result.hits.hits.map((item) => {
           return item._id
         })
+
+  const { page, size } = req.query;
+  const { limit, offset } = getPagination(page, size);
+  Files.findAndCountAll({ limit, offset, where: {
+    id: ids
+  },include: [{
+    model: User,
+    as: 'user'
+    //
+  }] })
+    .then(data => {
+      const response = getPagingData(data, page, limit);
+      res.send(response);
+    })
+    .catch(err => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving tutorials."
+      });
+    });
+
+
         
-        console.log("found ids",ids)
-        data = await Files.findAll({
-          where: {
-            id: ids
-          }
-        })
-        res.send(data)
       }
       catch(err){
         res.status(500).send({
