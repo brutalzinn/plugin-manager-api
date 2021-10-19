@@ -178,7 +178,8 @@ module.exports = {
            url: fileManager.getFileUrl(filename)
          }
          Files.create(file).finally((e)=>{
-          ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
+         // ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
+         //fileManager.delFile(filename)
          })
         
         })
