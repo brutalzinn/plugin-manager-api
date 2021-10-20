@@ -230,6 +230,9 @@ async upload(req, res) {
       let file = {}
       let filename = req.file.filename
       versionManager.update(version).then((version_id)=>{
+        if(!version_id){
+          return res.status(400).json({ error: "Error on update plugin. PackageId dont found." });
+        }
         file = {
           filename: fileManager.getFileInfo(filename).name,
           type: fileManager.getFileInfo(filename).type,
