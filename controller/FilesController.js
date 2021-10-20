@@ -207,22 +207,61 @@ async upload(req, res) {
       })
       
     })
-    
     //await ftpManager.upload(req.file.filename)
     console.log(`Uploading ${filename} to hostgator server..`)
     
     
     console.log(`trying to delete file ${filename} of tmp folder.`)
-    
-    
-    
+
   })
+},
+  async update(req, res) {
+    multerUpload.single('plugin')(req, res, async function (err) {
+      if(!req.file){
+        return res.status(400).json({ error: "Error on update plugin" });
+      }
+      let version = {
+        sha:req.body.sha || '',
+        crc:req.body.crc || '',
+        unique_id:req.params.versionid || '',
+        file_version: req.body.version || '1.0.0.0' 
+      }
+     
+      let file = {}
+      let filename = req.file.filename
+      versionManager.update(version).then((version_id)=>{
+        file = {
+          filename: fileManager.getFileInfo(filename).name,
+          type: fileManager.getFileInfo(filename).type,
+          description: req.body.description,
+          name: req.body.name,
+          repo:req.body.repo,
+          user_id: req.userId,
+          url: fileManager.getFileUrl(filename)
+        }
+        Files.update(file,{where:{version_id}}).finally((e)=>{
+          // ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
+          //fileManager.delFile(filename)
+          return res.json({status:true});
+        }).catch(()=>{
+          versionManager.delete(version_id).finally(()=>console.log('deu erro no version.'))
+        })
+        
+      })
+      //await ftpManager.upload(req.file.filename)
+      console.log(`Uploading ${filename} to hostgator server..`)
+      
+      
+      console.log(`trying to delete file ${filename} of tmp folder.`)
+  
+    })
+  }
   //  await ftpManager.example()
   // add file and it's path to postgres database
   //   Files.create({filename,filepath:filePath,name:req.body.name})
   // return res.json({status:true});
   
   
-}
+
 
 }
