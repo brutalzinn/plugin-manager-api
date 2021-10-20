@@ -42,6 +42,7 @@ const getPagingData = (data, page, limit) => {
 };
 
 module.exports = {
+
   async index(req, res) {
     const { page, size } = req.query;
     const { limit, offset } = getPagination(page, size);
@@ -64,13 +65,31 @@ module.exports = {
       err.message || "Some error occurred while retrieving tutorials."
     });
   });
-  
-  // const data = await Files.findAll({include: [{
-  //   model: User,
-  //   as: 'user'
-  //   //
-  // }]});
-  //return res.json({status:true,data});
+},
+
+async user(req, res) {
+
+  const { page, size } = req.query;
+  const { limit, offset } = getPagination(page, size);
+  Files.findAndCountAll({ where:{user_id: req.userId}, limit, offset,include: [{
+    model: User,
+    as: 'user'
+  },
+  {
+    model: Version,
+    as: 'version'
+  }
+] })
+.then(data => {
+  const response = getPagingData(data, page, limit);
+  res.send(response);
+})
+.catch(err => {
+  res.status(500).send({
+    message:
+    err.message || "Some error occurred while retrieving tutorials."
+  });
+});
 },
 
 async search(req,res) {
