@@ -5,6 +5,7 @@ class Version extends Model {
     super.init(
       {
         file_version: DataTypes.STRING,
+        unique_id: DataTypes.STRING,
         sha: DataTypes.STRING,
         crc: DataTypes.STRING,
         status: {

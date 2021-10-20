@@ -23,6 +23,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.TEXT,
       },
+      unique_id: {
+        allowNull: false,
+        type: Sequelize.TEXT,
+      },
       status: {
         allowNull: false,
         type: Sequelize.BOOLEAN,
