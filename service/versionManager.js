@@ -38,6 +38,16 @@ module.exports = {
             return false
         }
         
-    }
+    },
+    async check(body){ 
+        let result = []
+       await Promise.all(body.map(async(item)=>{
+         let v = await Version.findOne({where:{...item},raw: true,nest: true})
+         if(v){
+            result.push({...item,version:v.file_version})
+         }
+        }))
+        return result
+        }
     
 }
