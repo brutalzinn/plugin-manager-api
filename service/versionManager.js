@@ -36,18 +36,21 @@ module.exports = {
             return true
         }else{
             return false
-        }
-        
+        }      
     },
-    async check(body){ 
+    async check(body){        
+        if(Array.isArray(body)){
         let result = []
-       await Promise.all(body.map(async(item)=>{
-         let v = await Version.findOne({where:{...item},raw: true,nest: true})
-         if(v){
-            result.push({...item,version:v.file_version})
-         }
-        }))
-        return result
+        await Promise.all(body.map(async(item)=>{
+            let v = await Version.findOne({where:{...item}, raw: true, nest: true})
+            if(v){
+                result.push({...item,version:v.file_version})
+            }
+            }))
+            return result
+        }else{
+         return await Version.findOne({where: { unique_id: body}}) || null
+        }   
         }
     
 }
