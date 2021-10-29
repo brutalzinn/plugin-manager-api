@@ -40,10 +40,20 @@ module.exports = {
         await Promise.all(body.map(async(item)=>{
             let v = await Version.findOne({where:{...item}, raw: true, nest: true})
             if(v){
-                result.push({...item,version:v.file_version})
+                result.push({...item,version:v.file_version,status:true})
+            }else{
+                result.push({...item,status:false})
             }
             }))
-            return result
+            return result.sort((a, b) =>{
+                if(a.status == true && b.status == false){
+                    return -1
+                }
+                if(a.status == false && b.status == true){
+                    return 1
+                }
+                return 0
+            })
         }else{
          return await Version.findOne({where: { unique_id: body}}) || null
         }   
