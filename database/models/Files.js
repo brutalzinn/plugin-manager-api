@@ -40,7 +40,7 @@ class Files extends Model {
         await helper.saveDocument(this,data,models)
       });
       this.afterUpdate(async (data, options) => {
-        await helper.saveDocument(this,data,models)
+        await helper.updateDocument(this,data,models)
       });
       this.afterDestroy(async (data, options) => {
         await helper.destroyDocument(this,data,models)

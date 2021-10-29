@@ -27,15 +27,15 @@ class Version extends Model {
     }
     static Hooks(models){
       
-      this.afterCreate(async (data, options) => {
-        await helper.saveDocument(this,data,models)
-      });
-      this.afterUpdate(async (data, options) => {
-        await helper.saveDocument(this,data,models)
-      });
-      this.afterDestroy(async (data, options) => {
-        await helper.destroyDocument(this,data,models)
-      });
+      // this.afterCreate(async (data, options) => {
+      //   await helper.saveDocument(this,data,models)
+      // });
+      // this.afterUpdate(async (data, options) => {
+      //   await helper.updateDocument(this,data,models)
+      // });
+      // this.afterDestroy(async (data, options) => {
+      //   await helper.destroyDocument(this,data,models)
+      // });
       
     }
     

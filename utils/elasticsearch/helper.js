@@ -12,17 +12,10 @@ const tagsGenerator = (model = []) =>{
   }
   return tags
 }
-
-const saveDocument = async (instance,data,models) => {
-  
-  const type = instance.name.toLowerCase();
-  console.log('INTERNACENAME',type)
-  let document = {}
-  const regex = /[\s]/
+const createDocument = async (type,instance,data,models) => {
   let salt = []
   let tags = []
-  let result
-  // Get nested data for document
+  let result = {}
   switch (type) {
     case 'files':
     result = await instance.findOne({
@@ -42,29 +35,41 @@ const saveDocument = async (instance,data,models) => {
     })
     salt = [result.name,result.user.name,result.version.file_version]
     tags = tagsGenerator(salt)
-    document = {
+    return {
       id:result.id,
       name:result.name,
       author:result.user.name,
       search:tags
     }
-    
-    break;
-    
+   
     default:
     include = [];
     break;
-  };
-  // Send document to Elasticsearch cluster
+  }
+}
+const saveDocument = async (instance,data,models) => {
+  const type = instance.name.toLowerCase();
+  let document =  await createDocument(type,instance,data,models)
   return es.create({
     index: type,
     type: type,
     id: data.id,
-    body:document,
+    body: document
+  });
+}
+const updateDocument = async (instance,data,models) => {
+  const type = instance.name.toLowerCase();
+  let document = await createDocument(type,instance,data,models)
+  return es.update({
+    index: type,
+    type: type,
+    id: data.id,
+    body: {doc : document}
   });
 }
 
 const destroyDocument = async (instance,data) => {
+  const type = instance.name.toLowerCase();
   return es.delete({
     index: type,
     type: type,
@@ -72,4 +77,4 @@ const destroyDocument = async (instance,data) => {
   });
 };
 
-module.exports ={destroyDocument,saveDocument}
+module.exports ={destroyDocument,saveDocument,updateDocument}

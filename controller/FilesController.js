@@ -13,7 +13,7 @@ const ftpManager = require("../service/ftpManager")
 const fileManager = require("../service/fileManager")
 const tmpDirectory = path.join(path.dirname(require.main.filename),'uploads')
 
-
+//ALL THIS CODE NEEDS BE MOVEED TO A SERVICE LAYER.
 const multer  = require('multer');
 
 var storage = multer.diskStorage({
@@ -226,39 +226,61 @@ async upload(req, res) {
         unique_id:req.params.versionid || '',
         file_version: req.body.version || '1.0.0.0' 
       }
-     
-      let file = {}
       let filename = req.file.filename
-      versionManager.update(version).then((version_id)=>{
-        if(!version_id){
+
+      let file = {
+       filename: fileManager.getFileInfo(filename).name,
+       type: fileManager.getFileInfo(filename).type,
+       description: req.body.description,
+       name: req.body.name,
+       repo:req.body.repo,
+       url: fileManager.getFileUrl(filename)
+     }
+
+      let user_id = req.userId
+
+      const FilesModel = await Files.findOne({include: [
+      {
+        model: Version,
+        as: 'version',
+        where: {unique_id:version.unique_id}
+      }],where:{user_id}});
+
+      if (!FilesModel) {
+        return res.status(400).json({ error: `Cant found file ${filename}` });
+      }
+
+      let CheckVersion  = await versionManager.update(FilesModel.version.id,version)
+        if(!CheckVersion){
           return res.status(400).json({ error: "Error on update plugin. PackageId dont found." });
         }
-        file = {
-          filename: fileManager.getFileInfo(filename).name,
-          type: fileManager.getFileInfo(filename).type,
-          description: req.body.description,
-          name: req.body.name,
-          repo:req.body.repo,
-          user_id: req.userId,
-          url: fileManager.getFileUrl(filename)
-        }
-        Files.update(file,{where:{version_id}}).finally((e)=>{
+
+        
+  
           // ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
           //fileManager.delFile(filename)
+          FilesModel.filename = file.filename
+          FilesModel.name = file.name
+          FilesModel.type = file.type
+          FilesModel.repo = file.repo
+          FilesModel.url = file.url
+          await FilesModel.save()
+          
           return res.json({status:true});
-        }).catch(()=>{
+      
           versionManager.delete(version_id).finally(()=>console.log('deu erro no version.'))
-        })
+          return res.json({status:false});
+     
         
-      })
+    
       //await ftpManager.upload(req.file.filename)
       console.log(`Uploading ${filename} to hostgator server..`)
       
       
       console.log(`trying to delete file ${filename} of tmp folder.`)
   
-    })
-  }
+
+  })}
   //  await ftpManager.example()
   // add file and it's path to postgres database
   //   Files.create({filename,filepath:filePath,name:req.body.name})

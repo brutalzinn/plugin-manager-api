@@ -9,19 +9,15 @@ module.exports = {
             })
         })
     },
-   async update (body) {
-       
-            const {unique_id,sha,crc,file_version} = body
-          
-            let versionSelect = await Version.findOne({where:{unique_id},raw: true,nest: true})
+   async update (id,body) {   
+            const {sha,crc,file_version} = body          
+            let versionSelect = await Version.findOne({where:{id},raw: true,nest: true})
              if(versionSelect){
-            Version.update({sha,crc,file_version},{where:{unique_id}})
-            return versionSelect.id
+            await Version.update({sha,crc,file_version},{where:{id}})
+            return true
              }else{
                  return false
              }
-               
-       
     },
     delete(id){
         return new Promise((resolve, reject) => {
