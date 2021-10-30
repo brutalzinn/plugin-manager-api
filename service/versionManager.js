@@ -1,4 +1,5 @@
 const Version = require("../database/models/Version");
+const Files = require("../database/models/Files");
 
 module.exports = {
     
@@ -38,9 +39,14 @@ module.exports = {
         if(Array.isArray(body)){
         let result = []
         await Promise.all(body.map(async(item)=>{
-            let v = await Version.findOne({where:{...item}, raw: true, nest: true})
+            let v = await Files.findOne({include: [
+                {
+                  model: Version,
+                  as: 'version',
+                  where: {...item}
+                }]});
             if(v){
-                result.push({...item,version:v.file_version,status:true})
+                result.push({...item,version:v.version.file_version,url:v.url,status:true})
             }else{
                 result.push({...item,status:false})
             }
@@ -55,7 +61,13 @@ module.exports = {
                 return 0
             })
         }else{
-         return await Version.findOne({where: { unique_id: body}}) || null
+            return await Files.findOne({include: [
+                {
+                  model: Version,
+                  as: 'version',
+                  where: { unique_id: body}
+                }]}) || null
+
         }   
         }
     
