@@ -1,5 +1,5 @@
 const {filenameExample,typesExample,urlRepoExample,descriptionExample,repoUsers} = require('../utils/seedModel/seeds.models')
-const fileManager = require("../service/fileManager")
+const fileManager = require("../service/filesService")
 
 function getRandomInt(min, max) {
     min = Math.ceil(min)

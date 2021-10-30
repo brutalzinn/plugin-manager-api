@@ -3,7 +3,7 @@ services:
     server:
       build: .
       command: >
-        sh -c "rm -rfv ./uploads/* && npm install && npm run dev"
+        sh -c "npm run dev"
       container_name: plugin-manager-api
       restart: always
       networks:
@@ -62,18 +62,18 @@ services:
         - elasticsearch
       ports:
         - 5601:5601
-    rabbitmq:
-            image: rabbitmq:3-management-alpine
-            container_name: rabbitmq
-            volumes:
-                - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
-                - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
-                - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
-            env_file:
-              - .env
-            ports:
-                - 5672:5672
-                - 15672:15672
+    # rabbitmq:
+    #         image: rabbitmq:3-management-alpine
+    #         container_name: rabbitmq
+    #         volumes:
+    #             - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+    #             - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+    #             - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    #         env_file:
+    #           - .env
+    #         ports:
+    #             - 5672:5672
+    #             - 15672:15672
       
 networks:
   es-net:

@@ -1,16 +1,12 @@
-const Files = require("../database/models/Files");
-const User = require("../database/models/User");
-const Version = require("../database/models/Version");
+
 
 const path = require('path');
 const fs = require('fs');
 const es = require('../config/elasticsearch')
 const randomHelper = require('../utils/seederHelper')
+const filesService = require('../service/filesService')
 const uuid = require('uuid').v4
-const versionManager = require("../service/versionManager")
-
-const ftpManager = require("../service/ftpManager")
-const fileManager = require("../service/fileManager")
+//const ftpManager = require("../service/filesService")
 const tmpDirectory = path.join(path.dirname(require.main.filename),'uploads')
 
 //ALL THIS CODE NEEDS BE MOVEED TO A SERVICE LAYER.
@@ -27,266 +23,64 @@ var storage = multer.diskStorage({
 
 const multerUpload = multer({ storage: storage });
 
-const getPagination = (page, size) => {
-  const limit = size ? +size : 3;
-  const offset = page ? page * limit : 0;
-  
-  return { limit, offset };
-};
-const getPagingData = (data, page, limit) => {
-  const { count: totalItems, rows: files } = data;
-  const currentPage = page ? +page : 1;
-  const totalPages = Math.ceil(totalItems / limit);
-  
-  return { totalItems, files, totalPages, currentPage };
-};
+
 
 module.exports = {
-
+  
   async index(req, res) {
     const { page, size } = req.query;
-    const { limit, offset } = getPagination(page, size);
-    Files.findAndCountAll({ limit, offset,include: [{
-      model: User,
-      as: 'user'
-    },
-    {
-      model: Version,
-      as: 'version'
-    }
-  ] })
-  .then(data => {
-    const response = getPagingData(data, page, limit);
-    res.send(response);
-  })
-  .catch(err => {
-    res.status(500).send({
-      message:
-      err.message || "Some error occurred while retrieving tutorials."
-    });
-  });
-},
-
-async user(req, res) {
-
-  const { page, size } = req.query;
-  const { limit, offset } = getPagination(page, size);
-  Files.findAndCountAll({ where:{user_id: req.userId}, limit, offset,include: [{
-    model: User,
-    as: 'user'
+    return res.send(await filesService.index(page, size))
   },
-  {
-    model: Version,
-    as: 'version'
-  }
-] })
-.then(data => {
-  const response = getPagingData(data, page, limit);
-  res.send(response);
-})
-.catch(err => {
-  res.status(500).send({
-    message:
-    err.message || "Some error occurred while retrieving tutorials."
-  });
-});
-},
-
-async search(req,res) {
-  var searchParams  =[]
-  searchParams = req.query.q.normalize('NFD').replace(/[\u0300-\u036f]/g, "").split(' ')
   
-  searchParams =  searchParams.map((term)=> {
-    return {
-      regexp: {
-        search: {
-          value: term + '.*',
-          flags: "ALL"
+  async ArquivosPorUsuario(req, res) {
+    const { page, size } = req.query;
+    return res.send(await filesService.ArquivosDeUsuario(page, size))
+  },
+  
+  async BuscaElasticSearch(req,res) {
+    var searchParams  =[]
+    searchParams = req.query.q.normalize('NFD').replace(/[\u0300-\u036f]/g, "").split(' ')
+    searchParams =  searchParams.map((term)=> {
+      return {
+        regexp: {
+          search: {
+            value: term + '.*',
+            flags: "ALL"
+          }
         }
-      }
-    }  
-  })
-  try{
-    const result = await es.search({
-      index: 'files',
-      type: 'files',
-      body: {  
-        query: {
-          bool: {
-            filter: searchParams
-          }}
-        }
-      })
-      const ids = result.hits.hits.map((item) => {
-        return item._id
-      })
-      const { page, size } = req.query;
-      const { limit, offset } = getPagination(page, size);
-      Files.findAndCountAll({ limit, offset, where: {
-        id: ids
-      },include: [{
-        model: User,
-        as: 'user'
-      },
-      {
-        model: Version,
-        as: 'version'
-      }
-      
-    ] })
-    .then(data => {
-      const response = getPagingData(data, page, limit);
-      res.send(response);
+      }  
     })
-    .catch(err => {
+    try{
+      res.send(await filesService.Busca(searchParams))
+    }
+    catch(err){
       res.status(500).send({
-        message:
-        err.message || "Some error occurred while retrieving tutorials."
-      });
-    }); 
-  }
-  catch(err){
-    res.status(500).send({
-      error: 'An error has occured trying to get the articles' + err
-    })
-  }
-},
-async delete(req, res) {
-  fs.unlink(req.query.filepath, () => {
-    Files.destroy({where:{filepath:req.query.filepath}})
-    return res.json({status:true});
-  });
-},
-async download(req, res) {
-  return res.download(req.query.filepath);
-},
-async uploadTest (req,res ){
-  
-  
-  const randomFile = randomHelper.randomFilesModel(1,req.body.name,req.userId)
-  
-  await Files.create(randomFile[0])
-  return res.json({status:true});
-  
-},
-async upload(req, res) {
-  multerUpload.single('plugin')(req, res, async function (err) {
-    if(!req.file){
-      return res.status(400).json({ error: "Error on upload plugin" });
-    }
-    let version = {
-      sha:req.body.sha || '',
-      crc:req.body.crc || '',
-      unique_id:req.body.unique_id || '',
-      file_version: req.body.version || '1.0.0.0' 
-    }
-    let checkVersion =  await versionManager.checkUniqueID(version.unique_id)  
-    if(checkVersion){
-      console.log('já tem esse cara lá.')
-      return res.status(400).json({ error: "Already has plugin with this version:" + version.unique_id });
-    }
-    let file = {}
-    let filename = req.file.filename
-    versionManager.create(version).then((version_id)=>{
-      file = {
-        filename: fileManager.getFileInfo(filename).name,
-        type: fileManager.getFileInfo(filename).type,
-        description: req.body.description,
-        name: req.body.name,
-        version_id,
-        repo:req.body.repo,
-        user_id: req.userId,
-        url: fileManager.getFileUrl(filename)
-      }
-      Files.create(file).finally((e)=>{
-        // ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
-        //fileManager.delFile(filename)
-        return res.json({status:true});
-      }).catch(()=>{
-        versionManager.delete(version_id).finally(()=>console.log('deu erro no version.'))
+        error: 'An error has occured trying to get the articles' + err
       })
-      
+    }
+  },
+  
+  async DeletarArquivo(req, res) {
+    return await filesService.DeletarArquivo(req.query.filepath)
+  },
+  async download(req, res) {
+    return res.download(req.query.filepath);
+  },
+  async EnviarArquivo(req, res) {
+    multerUpload.single('plugin')(req, res, async function (err) {
+      if(!req.file){
+        return res.status(400).json({ error: "Error on upload plugin" });
+      }
+      let result = await filesService.EnviarArquivo(req.file.filename,req.body)
+      return result.status == true ? res.status(200).send(result) : res.status(400).send(result);    
     })
-    //await ftpManager.upload(req.file.filename)
-    console.log(`Uploading ${filename} to hostgator server..`)
-    
-    
-    console.log(`trying to delete file ${filename} of tmp folder.`)
-
-  })
-},
-  async update(req, res) {
+  },
+  async AtualizarArquivo(req, res) {
     multerUpload.single('plugin')(req, res, async function (err) {
       if(!req.file){
         return res.status(400).json({ error: "Error on update plugin" });
       }
-      let version = {
-        sha:req.body.sha || '',
-        crc:req.body.crc || '',
-        unique_id:req.params.versionid || '',
-        file_version: req.body.version || '1.0.0.0' 
-      }
-      let filename = req.file.filename
-
-      let file = {
-       filename: fileManager.getFileInfo(filename).name,
-       type: fileManager.getFileInfo(filename).type,
-       description: req.body.description,
-       name: req.body.name,
-       repo:req.body.repo,
-       url: fileManager.getFileUrl(filename)
-     }
-
-      let user_id = req.userId
-
-      const FilesModel = await Files.findOne({include: [
-      {
-        model: Version,
-        as: 'version',
-        where: {unique_id:version.unique_id}
-      }],where:{user_id}});
-
-      if (!FilesModel) {
-        return res.status(400).json({ error: `Cant found file ${filename}` });
-      }
-
-      let CheckVersion  = await versionManager.update(FilesModel.version.id,version)
-        if(!CheckVersion){
-          return res.status(400).json({ error: "Error on update plugin. PackageId dont found." });
-        }
-
-        
-  
-          // ftpManager.upload(req.file.filename).finally(()=>fileManager.delFile(filename))
-          //fileManager.delFile(filename)
-          FilesModel.filename = file.filename
-          FilesModel.name = file.name
-          FilesModel.type = file.type
-          FilesModel.repo = file.repo
-          FilesModel.url = file.url
-          await FilesModel.save()
-          
-          return res.json({status:true});
-      
-          versionManager.delete(version_id).finally(()=>console.log('deu erro no version.'))
-          return res.json({status:false});
-     
-        
-    
-      //await ftpManager.upload(req.file.filename)
-      console.log(`Uploading ${filename} to hostgator server..`)
-      
-      
-      console.log(`trying to delete file ${filename} of tmp folder.`)
-  
-
-  })}
-  //  await ftpManager.example()
-  // add file and it's path to postgres database
-  //   Files.create({filename,filepath:filePath,name:req.body.name})
-  // return res.json({status:true});
-  
-  
-
-
-}
+      let result = await filesService.AtualizarArquivo(req.file.filename,req.body)
+      return result.status == true ? res.status(200).send(result) : res.status(400).send(result);  
+      })}    
+    }

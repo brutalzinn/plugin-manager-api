@@ -1,5 +1,5 @@
 
-const versionManager = require("../service/versionManager")
+const versionManager = require("../service/versionService")
 
 module.exports = {
   async checkVersion(req,res) {
