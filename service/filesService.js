@@ -1,23 +1,14 @@
 require("dotenv").config();
 const path = require('path');
 const fs = require('fs');
+const es = require('../config/elasticsearch')
+
 const Files = require("../database/models/Files");
 const User = require("../database/models/User");
 const Version = require("../database/models/Version");
 const versionManager = require("../service/versionService")
-
 const tmpDirectory = path.join(path.dirname(require.main.filename),'uploads')
-const multer  = require('multer');
-var storage = multer.diskStorage({
-     destination: function (req, file, cb) {
-          cb(null, tmpDirectory)
-     },
-     filename: function (req, file, cb) {
-          cb(null, uuid() + path.extname(file.originalname)) //Appending extension
-     }
-})
 
-const multerUpload = multer({ storage: storage });
 
 
 const getPagination = (page, size) => {
@@ -44,7 +35,7 @@ module.exports = {
      
      async index(page, size) {
           const { limit, offset } = getPagination(page, size);
-          Files.findAndCountAll({ limit, offset,include: [{
+         let data = await Files.findAndCountAll({ limit, offset,include: [{
                model: User,
                as: 'user'
           },
@@ -53,19 +44,13 @@ module.exports = {
                as: 'version'
           }
      ] })
-     .then(data => {
-          return getPagingData(data, page, limit);
-     }).catch(err => {
-          return {
-               message:
-               err.message || "Aconteceu algum erro."
-          }
-     });
+     return getPagingData(data, page, limit);
+
 },
 async ArquivosDeUsuario(page, size) {
      const { limit, offset } = getPagination(page, size);
      
-     Files.findAndCountAll({ where:{user_id: req.userId}, limit, offset,include: [{
+    let data = await Files.findAndCountAll({ where:{user_id: req.userId}, limit, offset,include: [{
           model: User,
           as: 'user'
      },
@@ -74,18 +59,10 @@ async ArquivosDeUsuario(page, size) {
           as: 'version'
      }
 ] })
-.then(data => {
      return getPagingData(data, page, limit);
-})
-.catch(err => {
-     return {
-          message:
-          err.message || "Aconteceu algum erro."
-     }
-});
 },
 
-async Busca(searchParams) {
+async Busca(searchParams,page, size) {
      var searchParams  =[]
      try{
           const result = await es.search({
@@ -101,9 +78,8 @@ async Busca(searchParams) {
                const ids = result.hits.hits.map((item) => {
                     return item._id
                })
-               const { page, size } = req.query;
                const { limit, offset } = getPagination(page, size);
-               Files.findAndCountAll({ limit, offset, where: {
+             let data = await  Files.findAndCountAll({ limit, offset, where: {
                     id: ids
                },include: [{
                     model: User,
@@ -115,16 +91,8 @@ async Busca(searchParams) {
                }
                
           ] })
-          .then(data => {
-               return getPagingData(data, page, limit);
-               
-          })
-          .catch(err => {
-               return {
-                    message:
-                    err.message || "Some error occurred while retrieving tutorials."
-               }
-          }); 
+     
+          return getPagingData(data, page, limit);       
      }
      catch(err){
           return {

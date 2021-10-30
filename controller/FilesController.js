@@ -1,12 +1,8 @@
 
 
 const path = require('path');
-const fs = require('fs');
-const es = require('../config/elasticsearch')
-const randomHelper = require('../utils/seederHelper')
 const filesService = require('../service/filesService')
 const uuid = require('uuid').v4
-//const ftpManager = require("../service/filesService")
 const tmpDirectory = path.join(path.dirname(require.main.filename),'uploads')
 
 //ALL THIS CODE NEEDS BE MOVEED TO A SERVICE LAYER.
@@ -38,6 +34,8 @@ module.exports = {
   },
   
   async BuscaElasticSearch(req,res) {
+    const { page, size } = req.query;
+
     var searchParams  =[]
     searchParams = req.query.q.normalize('NFD').replace(/[\u0300-\u036f]/g, "").split(' ')
     searchParams =  searchParams.map((term)=> {
@@ -51,7 +49,7 @@ module.exports = {
       }  
     })
     try{
-      res.send(await filesService.Busca(searchParams))
+      res.send(await filesService.Busca(searchParams,page, size))
     }
     catch(err){
       res.status(500).send({
