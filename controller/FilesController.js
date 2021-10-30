@@ -71,7 +71,7 @@ module.exports = {
       if(!req.file){
         return res.status(400).json({ error: "Error on upload plugin" });
       }
-      let result = await filesService.EnviarArquivo(req.file.filename,req.body)
+      let result = await filesService.EnviarArquivo(req.userId,req.file.filename,req.body)
       return result.status == true ? res.status(200).send(result) : res.status(400).send(result);    
     })
   },
@@ -80,7 +80,7 @@ module.exports = {
       if(!req.file){
         return res.status(400).json({ error: "Error on update plugin" });
       }
-      let result = await filesService.AtualizarArquivo(req.file.filename,req.body)
+      let result = await filesService.AtualizarArquivo(req.userId,req.file.filename,req.body)
       return result.status == true ? res.status(200).send(result) : res.status(400).send(result);  
       })}    
     }
