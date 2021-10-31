@@ -47,10 +47,10 @@ module.exports = {
      return getPagingData(data, page, limit);
 
 },
-async ArquivosDeUsuario(page, size) {
+async ArquivosDeUsuario(userId,page, size) {
      const { limit, offset } = getPagination(page, size);
      
-    let data = await Files.findAndCountAll({ where:{user_id: req.userId}, limit, offset,include: [{
+    let data = await Files.findAndCountAll({ where:{user_id: userId}, limit, offset,include: [{
           model: User,
           as: 'user'
      },

@@ -30,7 +30,7 @@ module.exports = {
   
   async ArquivosPorUsuario(req, res) {
     const { page, size } = req.query;
-    return res.send(await filesService.ArquivosDeUsuario(page, size))
+    return res.send(await filesService.ArquivosDeUsuario(req.userId, page, size))
   },
   
   async BuscaElasticSearch(req,res) {
