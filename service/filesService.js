@@ -139,11 +139,11 @@ async EnviarArquivo(userId,filename,body) {
      
      //await ftpManager.upload(req.file.filename)   
 },
-async AtualizarArquivo(userId,filename,body) {
+async AtualizarArquivo(uniqueid,userId,filename,body) {
      let version = {
           sha:body.sha || '',
           crc:body.crc || '',
-          unique_id:req.params.versionid || '',
+          unique_id: uniqueid || '',
           file_version: body.version || '1.0.0.0' 
      }
      
@@ -183,10 +183,10 @@ async AtualizarArquivo(userId,filename,body) {
           FilesModel.url = file.url
           await FilesModel.save()
           
-          return res.json({status:true});
+          return {status:true};
           
-          versionManager.delete(version_id).finally(()=>console.log('deu erro no version.'))
-          return res.json({status:false});
+          // versionManager.delete(version_id).finally(()=>console.log('deu erro no version.'))
+          // return res.json({status:false});
           
           
      }
